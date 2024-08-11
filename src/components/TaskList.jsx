@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { FaEdit } from "react-icons/fa";
 import { MdDelete } from "react-icons/md";
+import Sortable from "sortablejs";
 
 const TaskList = ({
   tasks,
@@ -8,8 +9,31 @@ const TaskList = ({
   handleClickDeleteTask,
   handleToggleTask,
   handleToggleAllTasks,
+  // handleUpdateTaskOrder,
 }) => {
-  if (tasks.length === 0 ) {
+  const sortableRef = useRef(null);
+
+  useEffect(() => {
+    if (sortableRef.current) {
+      const sortable = new Sortable(sortableRef.current, {
+        animation: 150,
+        ghostClass: "blue-background-class",
+        onEnd: (evt) => {
+          const newOrder = [...tasks];
+          const [movedItem] = newOrder.splice(evt.oldIndex, 1);
+          newOrder.splice(evt.newIndex, 0, movedItem);
+          // handleUpdateTaskOrder(newOrder);
+        },
+      });
+
+      return () => {
+        sortable.destroy();
+      };
+    }
+  }, [tasks]);
+  // [tasks, handleUpdateTaskOrder]);
+
+  if (tasks.length === 0) {
     return (
       <div className="m-3">
         <p>No tasks found</p>
@@ -19,7 +43,7 @@ const TaskList = ({
 
   return (
     <>
-      <div id="task-list" className="m-3">
+      <div id="task-list" ref={sortableRef} className="m-3">
         <div className="task mb-2 flex items-center rounded border-b border-l border-r bg-slate-200 p-2 font-serif shadow-md">
           <div className="flex items-center justify-center pl-4">
             <input
@@ -37,7 +61,11 @@ const TaskList = ({
         </div>
 
         {tasks.map((task) => (
-          <div className="flex items-center justify-between rounded border pb-2 pl-6 pr-6 pt-2 shadow-md">
+          <div
+            key={task.id}
+            className="flex items-center justify-between rounded border pb-2 pl-6 pr-6 pt-2 shadow-md"
+            data-id={task.id}
+          >
             {/* {console.log(tasks)}
             {console.log(Array.isArray(tasks))} */}
             <div className="flex items-center justify-center gap-5">
@@ -55,6 +83,7 @@ const TaskList = ({
                   value={task.title}
                   key={task.id}
                   className={`${task.isChecked ? "task line-through" : "task"}`}
+                  readOnly
                 ></input>
               </div>
             </div>
